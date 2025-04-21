@@ -1,5 +1,6 @@
+"use client"
 import { useState, useEffect } from 'react';
-import MovieList from '../components/MovieList';
+import MovieList from '@/components/movieList';
 import Head from 'next/head';
 
 interface Movie {
