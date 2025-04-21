@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { FiSearch, FiX, FiMenu } from "react-icons/fi";
 import { FaUserCircle } from "react-icons/fa";
 
