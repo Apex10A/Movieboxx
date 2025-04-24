@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Navbar from '@/layout/header';
 import Image from 'next/image';
+import './index.css'
 import { FaPlay, FaInfoCircle, FaStar, FaRegStar } from 'react-icons/fa';
 import { FiChevronRight } from 'react-icons/fi';
 
@@ -28,7 +29,7 @@ const HomePage = () => {
       try {
         // Fetch popular movies
         const response = await fetch(
-          'https://api.themoviedb.org/3/movie/popular?api_key=9ce87dc52211c1bfc61c8705be0820e3'
+          `${process.env.NEXT_PUBLIC_API_URL}/movie/popular?api_key=${process.env.NEXT_PUBLIC_API_KEY}`
         );
         const data = await response.json();
         
@@ -96,7 +97,7 @@ const HomePage = () => {
           {/* Movie Info */}
           <div className="relative z-20 h-full flex flex-col justify-center px-6 md:px-12 lg:px-24">
             <div className="max-w-2xl">
-              <h1 className="text-4xl md:text-6xl font-bold mb-4">
+              <h1 className="text-4xl md:text-7xl font-bold mb-4">
                 {featuredMovie.title}
               </h1>
               

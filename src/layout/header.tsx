@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import "@/app/index.css";
 import { useRouter } from "next/navigation";
 import { FiSearch, FiX, FiMenu } from "react-icons/fi";
 import { FaUserCircle } from "react-icons/fa";
@@ -113,13 +114,13 @@ const Navbar = ({ movies = [] }: NavbarProps) => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
             <Link href="/movies" className="hover:text-primary transition">
-              Movies
+            <p>  Movies</p>
             </Link>
             <Link href="/tv-shows" className="hover:text-primary transition">
-              TV Shows
+            <p>  TV Shows </p>
             </Link>
             <Link href="/about" className="hover:text-primary transition">
-              About
+              <p>About</p>
             </Link>
             <button className="flex items-center space-x-1 hover:text-primary transition">
               <FaUserCircle className="text-xl" />
