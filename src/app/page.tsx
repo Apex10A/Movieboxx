@@ -16,27 +16,66 @@ interface Movie {
   vote_average: number;
   vote_count: number;
   release_date: string;
+  genre_ids?: number[];
+}
+
+interface MovieCategory {
+  title: string;
+  movies: Movie[];
+  link: string;
 }
 
 const HomePage = () => {
   const [featuredMovie, setFeaturedMovie] = useState<Movie | null>(null);
-  const [popularMovies, setPopularMovies] = useState<Movie[]>([]);
+  const [movieCategories, setMovieCategories] = useState<MovieCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [isTrailerPlaying, setIsTrailerPlaying] = useState(false);
 
   useEffect(() => {
     const fetchMovies = async () => {
       try {
-        // Fetch popular movies
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/movie/popular?api_key=${process.env.NEXT_PUBLIC_API_KEY}`
-        );
-        const data = await response.json();
-        
-        if (data.results && data.results.length > 0) {
-          setFeaturedMovie(data.results[0]); // First movie as featured
-          setPopularMovies(data.results.slice(1, 7)); // Next 6 as popular
+        // Fetch multiple categories in parallel
+        const [popularRes, trendingRes, topRatedRes, upcomingRes] = await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/movie/popular?api_key=${process.env.NEXT_PUBLIC_API_KEY}`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/trending/movie/week?api_key=${process.env.NEXT_PUBLIC_API_KEY}`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/movie/top_rated?api_key=${process.env.NEXT_PUBLIC_API_KEY}`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/movie/upcoming?api_key=${process.env.NEXT_PUBLIC_API_KEY}`),
+        ]);
+
+        const [popularData, trendingData, topRatedData, upcomingData] = await Promise.all([
+          popularRes.json(),
+          trendingRes.json(),
+          topRatedRes.json(),
+          upcomingRes.json(),
+        ]);
+
+        if (popularData.results?.length > 0) {
+          setFeaturedMovie(popularData.results[0]);
         }
+
+        setMovieCategories([
+          {
+            title: "Popular Movies",
+            movies: popularData.results?.slice(1, 7) || [],
+            link: "/movies/popular"
+          },
+          {
+            title: "Trending Now",
+            movies: trendingData.results?.slice(0, 6) || [],
+            link: "/movies/trending"
+          },
+          {
+            title: "Top Rated",
+            movies: topRatedData.results?.slice(0, 6) || [],
+            link: "/movies/top-rated"
+          },
+          {
+            title: "Coming Soon",
+            movies: upcomingData.results?.slice(0, 6) || [],
+            link: "/movies/upcoming"
+          }
+        ]);
+
       } catch (error) {
         console.error('Error fetching movies:', error);
       } finally {
@@ -80,10 +119,10 @@ const HomePage = () => {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <Navbar />
+      
       {/* Featured Movie Section */}
       {featuredMovie && (
         <div className="relative h-screen w-full">
-          {/* Background Image */}
           <div className="absolute inset-0 bg-black/60 z-10" />
           <Image
             src={`https://image.tmdb.org/t/p/original${featuredMovie.backdrop_path}`}
@@ -94,7 +133,6 @@ const HomePage = () => {
             priority
           />
 
-          {/* Movie Info */}
           <div className="relative z-20 h-full flex flex-col justify-center px-6 md:px-12 lg:px-24">
             <div className="max-w-2xl">
               <h1 className="text-4xl md:text-7xl font-bold mb-4">
@@ -133,49 +171,56 @@ const HomePage = () => {
         </div>
       )}
 
-      {/* Popular Movies Section */}
-      <div className="py-12 px-6 md:px-12 lg:px-24">
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold">Popular Movies</h2>
-          <Link href="/movies">
-            <div className="flex items-center text-red-400 hover:text-red-500 transition">
-              View All <FiChevronRight className="ml-1" />
-            </div>
-          </Link>
-        </div>
+      {/* Movie Categories Sections */}
+      {movieCategories.map((category) => (
+        <div key={category.title} className="py-12 px-6 md:px-12 lg:px-24">
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold">{category.title}</h2>
+            <Link href={category.link}>
+              <div className="flex items-center text-red-400 hover:text-red-500 transition">
+                View All <FiChevronRight className="ml-1" />
+              </div>
+            </Link>
+          </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {popularMovies.map((movie) => (
-            <Link key={movie.id} href={`/movies/${movie.id}`}>
-              <div className="group">
-                <div className="relative aspect-[2/3] rounded-lg overflow-hidden mb-3">
-                  <Image
-                    src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-                    alt={movie.title}
-                    layout="fill"
-                    objectFit="cover"
-                    className="transition group-hover:opacity-75"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition flex items-end p-4">
-                    <div>
-                      <h3 className="font-semibold">{movie.title}</h3>
-                      <div className="flex items-center mt-1">
-                        {renderRatingStars(movie.vote_average)}
-                        <span className="ml-2 text-sm">
-                          {movie.vote_average.toFixed(1)}
-                        </span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+            {category.movies.map((movie) => (
+              <Link key={movie.id} href={`/movies/${movie.id}`}>
+                <div className="group">
+                  <div className="relative aspect-[2/3] rounded-lg overflow-hidden mb-3">
+                    <Image
+                      src={movie.poster_path 
+                        ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+                        : '/placeholder-movie.jpg'}
+                      alt={movie.title}
+                      layout="fill"
+                      objectFit="cover"
+                      className="transition group-hover:opacity-75"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition flex items-end p-4">
+                      <div>
+                        <h3 className="font-semibold">{movie.title}</h3>
+                        <div className="flex items-center mt-1">
+                          {renderRatingStars(movie.vote_average)}
+                          <span className="ml-2 text-sm">
+                            {movie.vote_average.toFixed(1)}
+                          </span>
+                        </div>
+                        <p className="text-xs mt-2 line-clamp-2">
+                          {movie.overview}
+                        </p>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            ))}
+          </div>
         </div>
-      </div>
+      ))}
 
       {/* Trailer Modal */}
-      {isTrailerPlaying && (
+      {isTrailerPlaying && featuredMovie && (
         <div className="fixed inset-0 bg-black/90 z-50 flex justify-center items-center">
           <div className="relative w-full max-w-4xl aspect-video">
             <button
@@ -184,9 +229,16 @@ const HomePage = () => {
             >
               Close
             </button>
-            {/* You would replace this with your actual video player component */}
             <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-              <p className="text-xl">Trailer Player Would Go Here</p>
+              <iframe
+                width="100%"
+                height="100%"
+                src={`https://www.youtube.com/embed/?autoplay=1&listType=search&list=${featuredMovie.title} official trailer`}
+                title={`${featuredMovie.title} Trailer`}
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
             </div>
           </div>
         </div>
