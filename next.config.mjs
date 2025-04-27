@@ -22,8 +22,8 @@ const nextConfig = {
   
     // Environment variables that should be exposed to the browser
     env: {
-      TMDB_API_KEY: process.env.TMDB_API_KEY,
-      TMDB_BASE_URL: 'https://api.themoviedb.org/3',
+      TMDB_API_KEY: process.env.NEXT_PUBLIC_API_KEY,
+      TMDB_BASE_URL: process.env.NEXT_PUBLIC_API_URL,
       TMDB_IMAGE_BASE_URL: 'https://image.tmdb.org/t/p',
     },
   
